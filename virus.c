@@ -7,9 +7,14 @@
 // find entry point
 // inject simple code (to start with)
 
-// no libraries
+#include <stdio.h>
+
+#define MIN_ARGS 2
 
 int main(int argc, char **argv) {
-
+    if (argc < MIN_ARGS) {
+        fprintf("Too few arguments to call program\n", stderr);
+        exit(0);
+    }
 }
 
