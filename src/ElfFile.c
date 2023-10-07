@@ -36,14 +36,14 @@ Elf64_Ehdr ElfExtractHeader(int fd) {
     // lseek fails, exit the program
     int err = lseek(fd, 0, SEEK_SET);
     if (err < 0) {
-        fprintf("lseek failed\n", stderr);
+        fprintf(stderr, "lseek failed\n");
         exit(0);
     }
 
     // read into the elf header
     int count = read(fd, &elfHeader, sizeof(elfHeader));
     if (count != sizeof(elfHeader)) {
-        fprintf("Reading elf header failed\n", stderr);
+        fprintf(stderr, "Reading elf header failed\n");
         exit(0);
     }
 

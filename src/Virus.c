@@ -14,7 +14,7 @@
 
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
-        fprintf("Too few arguments to call program\n", stderr);
+        fprintf(stderr, "Too few arguments to call program\n");
         exit(0);
     }
 }
