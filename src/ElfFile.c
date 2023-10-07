@@ -52,7 +52,9 @@ Elf64_Ehdr ElfExtractHeader(int fd) {
 }
 
 // Extracts the entry point from an ELF header
-Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf);
+Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf) {
+    return elf.e_entry;
+}
 
 // Extracts the program header from an ELF header
 Elf64_Phdr ElfExtractProgramHeader(int fd);
