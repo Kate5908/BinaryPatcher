@@ -5,6 +5,7 @@
 
 #include <elf.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 // Checks if the file specified by fd is an ELF executable
 bool Elf(int fd);
@@ -23,7 +24,7 @@ Elf64_Addr ElfExtractVaddr(Elf64_Phdr elf);
 
 // marks the section offset resides in as executable
 // returns 1 on success, zero on failure
-int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_addr offset);
+int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset);
 
 // overwrites section specified by offset with contents of buffer
 int ElfOverwriteSection(size_t offset, char *buf, int bufSize);
