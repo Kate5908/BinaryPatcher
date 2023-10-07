@@ -10,11 +10,18 @@
 #define MAGIC_BYTES_SIZE 4
 
 bool Elf(int fd) {
+    // reset the file pointer
+    lseek(fd, 0, SEEK_SET);
+
+    // allocate a buffer to read into
     char buf[MAGIC_BYTES_SIZE];
 
+    // if read does not read MAGIC_BYTES_SIZE, flag an error
     int count = read(fd, buf, MAGIC_BYTES_SIZE);
-    if (count != MAGIC_BYTES) return false;
+    if (count != MAGIC_BYTES_SIZE) return false;
 
+    // if the magic bytes are the same as the bytes read from buf
+    // the file is an ELF executable file
     return strncmp(buf, MAGIC_BYTES, MAGIC_BYTES_SIZE) == 0;
 }
 
