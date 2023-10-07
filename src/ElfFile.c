@@ -2,6 +2,7 @@
 // Kate Rodionoff
 // 07/10/23
 
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include "include/ElfFile.h"
@@ -11,7 +12,9 @@
 
 bool Elf(int fd) {
     // reset the file pointer
-    lseek(fd, 0, SEEK_SET);
+    int err = lseek(fd, 0, SEEK_SET);
+    // if lseek fails return false
+    if (err < 0) return false;
 
     // allocate a buffer to read into
     char buf[MAGIC_BYTES_SIZE];
@@ -26,7 +29,26 @@ bool Elf(int fd) {
 }
 
 // Extracts the Elf header of the file specified by fd
-Elf64_Ehdr ElfExtractHeader(int fd);
+Elf64_Ehdr ElfExtractHeader(int fd) {
+    Elf64_Ehdr elfHeader;
+
+    // lseek fails, exit the program
+    int err = lseek(fd, 0, SEEK_SET);
+    if (err < 0) {
+        fprintf("lseek failed\n", stderr);
+        exit(0);
+    }
+
+    // read into the elf header
+    int count = read(fd, &elfHeader, sizeof(elfHeader));
+    if (count != sizeof(elfHeader)) {
+        fprintf("Reading elf header failed\n", stderr);
+        exit(0);
+    }
+
+    // elfHeader was successfully read
+    return elfHeader;
+}
 
 // Extracts the entry point from an ELF header
 Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf);
