@@ -8,6 +8,7 @@
 // inject simple code (to start with)
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MIN_ARGS 2
 
