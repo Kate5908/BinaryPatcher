@@ -8,8 +8,12 @@
 #include <unistd.h>
 #include "include/ElfFile.h"
 
+#define FAILURE 1
 #define MAGIC_BYTES "\x7f\x45\x4c\x46"
 #define MAGIC_BYTES_SIZE 4
+#define SUCCESS 0
+
+bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size);
 
 bool Elf(int fd) {
     // reset the file pointer
@@ -37,14 +41,14 @@ Elf64_Ehdr ElfExtractHeader(int fd) {
     int err = lseek(fd, 0, SEEK_SET);
     if (err < 0) {
         fprintf(stderr, "lseek failed\n");
-        exit(0);
+        exit(FAILURE);
     }
 
     // read into the elf header
     int count = read(fd, &elfHeader, sizeof(elfHeader));
     if (count != sizeof(elfHeader)) {
         fprintf(stderr, "Reading elf header failed\n");
-        exit(0);
+        exit(FAILURE);
     }
 
     // elfHeader was successfully read
@@ -57,14 +61,71 @@ Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf) {
 }
 
 // Extracts the program header from an ELF header
-Elf64_Phdr ElfExtractProgramHeader(int fd);
+Elf64_Phdr ElfExtractProgramHeader(int fd) {
+    Elf64_Phdr programHeader;
+
+    // set position to right after the ELF header
+    int err = lseek(fd, sizeof(Elf64_Ehdr), SEEK_SET);
+    if (err < 0) {
+        fprintf(stderr, "lseek failed\n");
+        exit(FAILURE);
+    }
+
+    // read in the program header
+    int count = read(fd, &programHeader, sizeof(programHeader));
+    if (count < sizeof(programHeader)) {
+        fprintf(stderr, "Reading program header failed\n");
+        exit(FAILURE);
+    }
+
+    // if read was successful, return the program header
+    return programHeader;
+}
 
 // Extracts virtual address from an ELF header
-Elf64_Addr ElfExtractVaddr(Elf64_Phdr elf);
+Elf64_Addr ElfExtractVaddr(Elf64_Phdr elf) {
+    return elf.p_vaddr;
+}
 
 // marks the section offset resides in as executable
-// returns 1 on success, zero on failure
-int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset);
+// returns 0 on success, 1 on failure
+int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
+    int err = lseek(fd, elf.e_shoff, SEEK_SET);
+    if (err < 0) return FAILURE;
+
+    for (int i = 0; i < elf.e_shnum; i++) {
+        Elf64_Shdr sectionHeader;
+        int count = read(fd, &sectionHeader, sizeof(sectionHeader));
+
+        if (count < sizeof(sectionHeader)) return 0;
+
+        if (between(sectionHeader.sh_addr, offset, sectionHeader.sh_size)) {
+            sectionHeader.sh_flags |= SHF_EXECINSTR;
+
+            err = lseek(fd, -sizeof(sectionHeader), SEEK_CUR);
+            if (err < 0) return FAILURE;
+
+            err = write(fd, &sectionHeader, sizeof(sectionHeader));
+            if (err < 0) return FAILURE;
+        }
+        return SUCCESS;
+    }
+
+    // couldn't find the corresponding section, return failure
+    return FAILURE;
+}
 
 // overwrites section specified by offset with contents of buffer
-int ElfOverwriteSection(size_t offset, char *buf, int bufSize);
+int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
+    int err = lseek(fd, offset, SEEK_SET);
+    if (err < 0) return FAILURE;
+
+    int err = write(fd, buf, bufSize);
+    if (err < 0) return FAILURE;
+
+    return SUCCESS;
+}
+
+bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size) {
+    return start <= offset && start + size > offset;
+}
