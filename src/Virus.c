@@ -7,7 +7,8 @@
 // find entry point
 // inject simple code (to start with)
 
-#include "ElfFile.h"
+#include "include/ElfFile.h"
+#include "include/CodeCave.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,15 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDWR);
 
+        if (!Elf(fd)) {
+            close(fd);
+            continue;
+        }
+
+        Elf64_Ehdr ehdr = ElfExtractHeader(fd);
+        Elf64_Phdr phdr = ElfExtractProgramHeader(fd);
+
+        CodeCave codeCave = FindCodeCave(fd, phdr);
         
     }
 }
