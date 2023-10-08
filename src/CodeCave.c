@@ -10,10 +10,12 @@
 // define the page size
 #define PAGE_SIZE getpagesize()
 
+bool isCodeCave(char buf[PAGE_SIZE]);
+
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
     CodeCave codeCave;
     codeCave.offset = 0;
-    codeCave.vaddr = NULL;
+    codeCave.vaddr = 0;
     codeCave.size = 0;
 
     char buf[PAGE_SIZE];

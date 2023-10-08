@@ -126,7 +126,7 @@ int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
     int err = lseek(fd, offset, SEEK_SET);
     if (err < 0) return FAILURE;
 
-    int err = write(fd, buf, bufSize);
+    err = write(fd, buf, bufSize);
     if (err < 0) return FAILURE;
 
     return SUCCESS;
