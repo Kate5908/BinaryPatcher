@@ -61,8 +61,9 @@ Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf) {
 }
 
 // Extracts the program header from an ELF header
-Elf64_Phdr ElfExtractProgramHeader(int fd) {
-    Elf64_Phdr programHeader;
+Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
+    Elf64_Phdr phdr;
+    int numHeaders = ehdr.e_phnum;
 
     // set position to right after the ELF header
     int err = lseek(fd, sizeof(Elf64_Ehdr), SEEK_SET);
@@ -72,14 +73,20 @@ Elf64_Phdr ElfExtractProgramHeader(int fd) {
     }
 
     // read in the program header
-    int count = read(fd, &programHeader, sizeof(programHeader));
-    if (count < sizeof(programHeader)) {
-        fprintf(stderr, "Reading program header failed\n");
-        exit(FAILURE);
+    int count = read(fd, &phdr, sizeof(phdr));
+    for (int i = 0; i < numHeaders; i++) {
+        if (count < sizeof(phdr)) {
+            fprintf(stderr, "Reading program header failed\n");
+            exit(FAILURE);
+        } else if (phdr.p_type == 1) {
+            break;
+        }
+
+        count = read(fd, &phdr, sizeof(phdr));
     }
 
     // if read was successful, return the program header
-    return programHeader;
+    return phdr;
 }
 
 // Extracts virtual address from an ELF header
@@ -94,18 +101,18 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
     if (err < 0) return FAILURE;
 
     for (int i = 0; i < elf.e_shnum; i++) {
-        Elf64_Shdr sectionHeader;
-        int count = read(fd, &sectionHeader, sizeof(sectionHeader));
+        Elf64_Shdr shdr;
+        int count = read(fd, &shdr, sizeof(shdr));
 
-        if (count < sizeof(sectionHeader)) return 0;
+        if (count < sizeof(shdr)) return 0;
 
-        if (between(sectionHeader.sh_addr, offset, sectionHeader.sh_size)) {
-            sectionHeader.sh_flags |= SHF_EXECINSTR;
+        if (between(shdr.sh_addr, offset, shdr.sh_size)) {
+            shdr.sh_flags |= SHF_EXECINSTR;
 
-            err = lseek(fd, -sizeof(sectionHeader), SEEK_CUR);
+            err = lseek(fd, -sizeof(shdr), SEEK_CUR);
             if (err < 0) return FAILURE;
 
-            err = write(fd, &sectionHeader, sizeof(sectionHeader));
+            err = write(fd, &shdr, sizeof(shdr));
             if (err < 0) return FAILURE;
         }
         return SUCCESS;
