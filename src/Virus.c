@@ -33,6 +33,9 @@ int main(int argc, char **argv) {
         Elf64_Ehdr ehdr = ElfExtractHeader(fd);
         Elf64_Phdr phdr = ElfExtractProgramHeader(fd);
 
+        // store the original return address
+        Elf64_Addr original = ehdr.e_entry;
+
         CodeCave codeCave = FindCodeCave(fd, phdr);
         
     }
