@@ -21,41 +21,66 @@ Elf64_Addr convertLittleEndian(Elf64_Addr addr);
 
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
-        fprintf(stderr, "Too few arguments to call program\n");
+        fprintf(stdout, "Too few arguments to call program\n");
         exit(0);
     }
+
+    printf("argc: %d\n", argc);
 
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDWR);
 
-        if (!Elf(fd)) goto end;
+        if (!Elf(fd)) {
+            fprintf(stderr, "Not elf file!\n");
+            goto end;
+        }
 
         Elf64_Ehdr ehdr = ElfExtractHeader(fd);
+        printf("Extracted elf header!\n");
         Elf64_Phdr phdr = ElfExtractProgramHeader(fd, ehdr);
+        printf("Extracted program header!\n");
 
         // store the original return address
         Elf64_Addr original = ehdr.e_entry;
+        printf("Original entry point at %d\n", original);
 
         CodeCave codeCave = FindCodeCave(fd, phdr);
+        printf("Found code cave at %d\n", codeCave.vaddr);
+        ehdr.e_entry = codeCave.vaddr;
+        int err = lseek(fd, 0, SEEK_SET);
+        if (err < 0) {
+            printf("Couldn't lseek to start of file\n");
+            goto end;
+        }
+        write(fd, &ehdr, sizeof(ehdr));
         
         Elf64_Addr shiftedAddr = convertLittleEndian(original);
+        printf("Shifted address\n");
 
-        int err = lseek(fd, codeCave.offset, SEEK_SET);
+        err = lseek(fd, codeCave.offset, SEEK_SET);
         // is this bad? Does this make me the worst programmer ever? Probably
         // this could easily be a function
         // I'm leaving this as a goto right now
         // TODO: care about code style
-        if (err < 0) goto end;
+        if (err < 0) {
+            fprintf(stdout, "Couldn't lseek to code cave position\n");
+            goto end;
+        }
         // are these zero bytes going to be identified as a null terminator?
-        dprintf(fd, "\xfd\x7b\xbf\xa9\xfd\x03\x91\x00\x00\x90\x00\x60\x1e\x91\xb3\xff\xff\x93%d\x80\xd2", shiftedAddr);
+        dprintf(fd, "%d\x80\xd2", shiftedAddr);
+        printf("Wrote to file\n");
 
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
-        if (err) goto end;
-        
+        if (err) {
+            fprintf(stdout, "Couldn't mark section executable\n");
+            goto end;
+        }
+
         end:
             close(fd);
-            return 0;
     }
+    // TODO: Fix the seg fault error :)
+    return 0;
 }
 
 // converts an address into little endian

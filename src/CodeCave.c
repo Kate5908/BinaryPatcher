@@ -5,6 +5,7 @@
 
 #include "include/CodeCave.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
 
 // define the page size
@@ -22,10 +23,11 @@ CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
     bool isConsecutive = false;
     while (read(fd, buf, PAGE_SIZE) > 0) {
         if (isCodeCave(buf) && !codeCave.vaddr) {
-            codeCave.offset = lseek(fd, -PAGE_SIZE, SEEK_SET);
+            codeCave.offset = lseek(fd, -PAGE_SIZE, SEEK_CUR);
             codeCave.size = PAGE_SIZE;
             codeCave.vaddr = phdr.p_vaddr + codeCave.offset;
             isConsecutive = true;
+            printf("Found code cave!!");
         } else if (isCodeCave(buf) && isConsecutive) {
             codeCave.size += PAGE_SIZE;
         }

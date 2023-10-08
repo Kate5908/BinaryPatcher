@@ -19,15 +19,19 @@ bool Elf(int fd) {
     // reset the file pointer
     int err = lseek(fd, 0, SEEK_SET);
     // if lseek fails return false
-    if (err < 0) return false;
+    if (err < 0) {
+        fprintf(stdout, "Elf lseek failed\n");
+        return false;
+    }
 
     // allocate a buffer to read into
     char buf[MAGIC_BYTES_SIZE];
 
     // if read does not read MAGIC_BYTES_SIZE, flag an error
     int count = read(fd, buf, MAGIC_BYTES_SIZE);
-    if (count != MAGIC_BYTES_SIZE) return false;
-
+    if (count != MAGIC_BYTES_SIZE) {
+        fprintf(stdout, "Elf read failed\n");
+    }
     // if the magic bytes are the same as the bytes read from buf
     // the file is an ELF executable file
     return strncmp(buf, MAGIC_BYTES, MAGIC_BYTES_SIZE) == 0;
@@ -40,14 +44,14 @@ Elf64_Ehdr ElfExtractHeader(int fd) {
     // lseek fails, exit the program
     int err = lseek(fd, 0, SEEK_SET);
     if (err < 0) {
-        fprintf(stderr, "lseek failed\n");
+        fprintf(stdout, "lseek failed\n");
         exit(FAILURE);
     }
 
     // read into the elf header
     int count = read(fd, &elfHeader, sizeof(elfHeader));
     if (count != sizeof(elfHeader)) {
-        fprintf(stderr, "Reading elf header failed\n");
+        fprintf(stdout, "Reading elf header failed\n");
         exit(FAILURE);
     }
 
@@ -68,7 +72,7 @@ Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
     // set position to right after the ELF header
     int err = lseek(fd, sizeof(Elf64_Ehdr), SEEK_SET);
     if (err < 0) {
-        fprintf(stderr, "lseek failed\n");
+        fprintf(stdout, "lseek failed\n");
         exit(FAILURE);
     }
 
@@ -76,7 +80,7 @@ Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
     int count = read(fd, &phdr, sizeof(phdr));
     for (int i = 0; i < numHeaders; i++) {
         if (count < sizeof(phdr)) {
-            fprintf(stderr, "Reading program header failed\n");
+            fprintf(stdout, "Reading program header failed\n");
             exit(FAILURE);
         } else if (phdr.p_type == 1) {
             break;
@@ -104,30 +108,46 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
         Elf64_Shdr shdr;
         int count = read(fd, &shdr, sizeof(shdr));
 
-        if (count < sizeof(shdr)) return FAILURE;
+        if (count < sizeof(shdr)) {
+            fprintf(stdout, "ElfMarkExecutable couldn't read file\n");
+            return FAILURE;
+        }
         else if (between(shdr.sh_addr, offset, shdr.sh_size)) {
             shdr.sh_flags |= SHF_EXECINSTR;
 
             err = lseek(fd, -sizeof(shdr), SEEK_CUR);
-            if (err < 0) return FAILURE;
+            if (err < 0) {
+                fprintf(stdout, "ElfMarkExecutable lseek failed\n");
+                return FAILURE;
+            }
 
             err = write(fd, &shdr, sizeof(shdr));
-            if (err < 0) return FAILURE;
+            if (err < 0) {
+                fprintf(stdout, "ElfMarkExecutable couldn't write to file\n");
+                return FAILURE;
+            }
+            return SUCCESS;
         }
-        return SUCCESS;
     }
 
     // couldn't find the corresponding section, return failure
+    fprintf(stdout, "ElfMarkExecutable couldn't find section");
     return FAILURE;
 }
 
 // overwrites section specified by offset with contents of buffer
 int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
     int err = lseek(fd, offset, SEEK_SET);
-    if (err < 0) return FAILURE;
+    if (err < 0) {
+        fprintf(stdout, "ElfOverwriteSection, couldn't lseek\n");
+        return FAILURE;
+    }
 
     err = write(fd, buf, bufSize);
-    if (err < 0) return FAILURE;
+    if (err < 0) {
+        fprintf(stdout, "ElfOverwriteSection, couldn't write to file");
+        return FAILURE;
+    }
 
     return SUCCESS;
 }
