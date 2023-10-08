@@ -17,7 +17,7 @@ Elf64_Ehdr ElfExtractHeader(int fd);
 Elf64_Addr ElfExtractEntry(Elf64_Ehdr elf);
 
 // Extracts the program header from an ELF header
-Elf64_Phdr ElfExtractProgramHeader(int fd);
+Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr);
 
 // Extracts virtual address from an ELF header
 Elf64_Addr ElfExtractVaddr(Elf64_Phdr elf);
