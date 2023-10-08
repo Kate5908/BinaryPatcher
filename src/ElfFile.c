@@ -104,9 +104,8 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
         Elf64_Shdr shdr;
         int count = read(fd, &shdr, sizeof(shdr));
 
-        if (count < sizeof(shdr)) return 0;
-
-        if (between(shdr.sh_addr, offset, shdr.sh_size)) {
+        if (count < sizeof(shdr)) return FAILURE;
+        else if (between(shdr.sh_addr, offset, shdr.sh_size)) {
             shdr.sh_flags |= SHF_EXECINSTR;
 
             err = lseek(fd, -sizeof(shdr), SEEK_CUR);
