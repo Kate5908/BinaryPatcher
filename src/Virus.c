@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
         }
         // are these zero bytes going to be identified as a null terminator?
         //dprintf(fd, "%d\x80\xd2", shiftedAddr);
-        write(fd, "\x48\x8b\x25\x50\x10\x00\x00\xc3\xb8", 5);
+        write(fd, "\x48\x8b\x25\x50\x10\x00\x00\xc3\xb8", 9);
         printf("Wrote to file\n");
 
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
