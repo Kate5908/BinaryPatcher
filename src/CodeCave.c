@@ -14,6 +14,7 @@
 bool isCodeCave(char buf[PAGE_SIZE]);
 
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
+    printf("Virtual address offset = %d\n", phdr.p_vaddr);
     CodeCave codeCave;
     codeCave.offset = 0;
     codeCave.vaddr = 0;
@@ -26,10 +27,15 @@ CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
             codeCave.offset = lseek(fd, -PAGE_SIZE, SEEK_CUR);
             codeCave.size = PAGE_SIZE;
             codeCave.vaddr = phdr.p_vaddr + codeCave.offset;
+
             isConsecutive = true;
-            printf("Found code cave!!");
+
+            printf("Found code cave!!\n");
+            lseek(fd, PAGE_SIZE, SEEK_CUR);
         } else if (isCodeCave(buf) && isConsecutive) {
             codeCave.size += PAGE_SIZE;
+        } else {
+            isConsecutive = false;
         }
     }
     return codeCave;

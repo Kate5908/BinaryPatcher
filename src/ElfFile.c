@@ -79,16 +79,16 @@ Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
     // read in the program header
     int count = read(fd, &phdr, sizeof(phdr));
     for (int i = 0; i < numHeaders; i++) {
+        printf("Phdr type = %d vaddr = %d\n", phdr.p_type, phdr.p_vaddr);
         if (count < sizeof(phdr)) {
             fprintf(stdout, "Reading program header failed\n");
             exit(FAILURE);
-        } else if (phdr.p_type == 1) {
+        } else if (phdr.p_type == PF_X) {
             break;
         }
 
         count = read(fd, &phdr, sizeof(phdr));
     }
-
     // if read was successful, return the program header
     return phdr;
 }
@@ -104,9 +104,12 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
     int err = lseek(fd, elf.e_shoff, SEEK_SET);
     if (err < 0) return FAILURE;
 
+    printf("Finding section of address: %d\n", offset);
+
     for (int i = 0; i < elf.e_shnum; i++) {
         Elf64_Shdr shdr;
         int count = read(fd, &shdr, sizeof(shdr));
+        printf("Current section is between %d and %d\n", shdr.sh_addr, shdr.sh_addr + shdr.sh_size);
 
         if (count < sizeof(shdr)) {
             fprintf(stdout, "ElfMarkExecutable couldn't read file\n");

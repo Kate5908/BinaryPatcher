@@ -10,6 +10,7 @@
 #include "include/ElfFile.h"
 #include "include/CodeCave.h"
 #include <fcntl.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,6 +36,10 @@ int main(int argc, char **argv) {
             goto end;
         }
 
+        char *args[2] = {"+w", argv[i]};
+        pid_t pid;
+        posix_spawn(&pid, "chmod", NULL, NULL, args, NULL);
+
         Elf64_Ehdr ehdr = ElfExtractHeader(fd);
         printf("Extracted elf header!\n");
         Elf64_Phdr phdr = ElfExtractProgramHeader(fd, ehdr);
@@ -45,7 +50,7 @@ int main(int argc, char **argv) {
         printf("Original entry point at %d\n", original);
 
         CodeCave codeCave = FindCodeCave(fd, phdr);
-        printf("Found code cave at %d\n", codeCave.vaddr);
+        printf("Found code cave at %d with offset %d and size %d\n", codeCave.vaddr, codeCave.offset, codeCave.size);
         ehdr.e_entry = codeCave.vaddr;
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
