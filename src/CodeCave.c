@@ -13,6 +13,11 @@
 
 bool isCodeCave(char buf[PAGE_SIZE]);
 
+// TODO:
+//  Define minimum size for code cave
+//  Maybe try to find the biggest code cave
+// Create a makefile
+
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
     printf("Virtual address offset = %d\n", phdr.p_vaddr);
     CodeCave codeCave;
