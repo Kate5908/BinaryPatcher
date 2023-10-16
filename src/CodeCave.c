@@ -5,6 +5,7 @@
 
 #include "include/CodeCave.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -12,13 +13,21 @@
 #define PAGE_SIZE getpagesize()
 
 bool isCodeCave(char buf[PAGE_SIZE]);
+uint64_t headerSize(Elf64_Ehdr ehdr);
 
 // TODO:
 //  Define minimum size for code cave
 //  Maybe try to find the biggest code cave
 // Create a makefile
 
-CodeCave FindCodeCave(int fd, Elf64_Phdr phdr) {
+CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr) {
+    // increment the file pointer so we don't accidentally overwrite
+    // the headers
+    int err = lseek(fd, headerSize(ehdr), SEEK_SET);
+    if (err < 0) {
+        fprintf(stderr, "lseek couldn't move file pointer");
+        exit(1);
+    }
     printf("Virtual address offset = %d\n", phdr.p_vaddr);
     CodeCave codeCave;
     codeCave.offset = 0;
@@ -54,4 +63,8 @@ bool isCodeCave(char buf[PAGE_SIZE]) {
     }
 
     return true;
+}
+
+uint64_t headerSize(Elf64_Ehdr ehdr) {
+    return ehdr.e_shoff + ehdr.e_shnum * ehdr.e_shentsize;
 }

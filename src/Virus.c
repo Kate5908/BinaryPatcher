@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         Elf64_Addr original = ehdr.e_entry;
         printf("Original entry point at %d\n", original);
 
-        CodeCave codeCave = FindCodeCave(fd, phdr);
+        CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
         printf("Found code cave at %d with offset %d and size %d\n", codeCave.vaddr, codeCave.offset, codeCave.size);
         ehdr.e_entry = codeCave.vaddr;
         int err = lseek(fd, 0, SEEK_SET);
