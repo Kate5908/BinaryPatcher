@@ -20,7 +20,7 @@ bool Elf(int fd) {
     int err = lseek(fd, 0, SEEK_SET);
     // if lseek fails return false
     if (err < 0) {
-        fprintf(stdout, "Elf lseek failed\n");
+        fprintf(stderr, "Elf lseek failed\n");
         return false;
     }
 
@@ -28,9 +28,9 @@ bool Elf(int fd) {
     char buf[MAGIC_BYTES_SIZE];
 
     // if read does not read MAGIC_BYTES_SIZE, flag an error
-    int count = read(fd, buf, MAGIC_BYTES_SIZE);
-    if (count != MAGIC_BYTES_SIZE) {
-        fprintf(stdout, "Elf read failed\n");
+    err = read(fd, buf, MAGIC_BYTES_SIZE);
+    if (err != MAGIC_BYTES_SIZE) {
+        fprintf(stderr, "Elf read failed\n");
     }
     // if the magic bytes are the same as the bytes read from buf
     // the file is an ELF executable file
@@ -44,14 +44,14 @@ Elf64_Ehdr ElfExtractHeader(int fd) {
     // lseek fails, exit the program
     int err = lseek(fd, 0, SEEK_SET);
     if (err < 0) {
-        fprintf(stdout, "lseek failed\n");
+        fprintf(stderr, "lseek failed\n");
         exit(FAILURE);
     }
 
     // read into the elf header
     int count = read(fd, &elfHeader, sizeof(elfHeader));
     if (count != sizeof(elfHeader)) {
-        fprintf(stdout, "Reading elf header failed\n");
+        fprintf(stderr, "Reading elf header failed\n");
         exit(FAILURE);
     }
 
@@ -70,20 +70,19 @@ Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
     int numHeaders = ehdr.e_phnum;
 
     // set position to right after the ELF header
-    int err = lseek(fd, sizeof(Elf64_Ehdr), SEEK_SET);
+    int err = lseek(fd, ehdr.e_phoff, SEEK_SET);
     if (err < 0) {
-        fprintf(stdout, "lseek failed\n");
+        fprintf(stderr, "lseek failed\n");
         exit(FAILURE);
     }
 
     // read in the program header
     int count = read(fd, &phdr, sizeof(phdr));
     for (int i = 0; i < numHeaders; i++) {
-        printf("Phdr type = %d vaddr = %d\n", phdr.p_type, phdr.p_vaddr);
         if (count < sizeof(phdr)) {
             fprintf(stdout, "Reading program header failed\n");
             exit(FAILURE);
-        } else if (phdr.p_type == PF_X) {
+        } else if (phdr.p_type == PT_LOAD) {
             break;
         }
 
@@ -104,18 +103,14 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
     int err = lseek(fd, elf.e_shoff, SEEK_SET);
     if (err < 0) return FAILURE;
 
-    printf("Finding section of address: %d\n", offset);
-
     for (int i = 0; i < elf.e_shnum; i++) {
         Elf64_Shdr shdr;
         int count = read(fd, &shdr, sizeof(shdr));
-        printf("Current section is between %d and %d\n", shdr.sh_addr, shdr.sh_addr + shdr.sh_size);
 
         if (count < sizeof(shdr)) {
             fprintf(stdout, "ElfMarkExecutable couldn't read file\n");
             return FAILURE;
-        }
-        else if (between(shdr.sh_addr, offset, shdr.sh_size)) {
+        } else if (between(offset, shdr.sh_addr, shdr.sh_size)) {
             shdr.sh_flags |= SHF_EXECINSTR;
 
             err = lseek(fd, -sizeof(shdr), SEEK_CUR);

@@ -17,12 +17,12 @@ bool isCodeCave(char buf[PAGE_SIZE]);
 uint64_t headerSize(Elf64_Ehdr ehdr);
 
 // TODO:
-//  Define minimum size for code cave
-//  Maybe try to find the biggest code cave
 // Create a makefile
+// ElfMarkExecutable doesn't work properly
 
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr) {
     CodeCave maxCave;
+    printf("Vaddr is %d\n", phdr.p_vaddr);
     maxCave.size = 0;
     CodeCave cur = {0, 0, 0};
 
