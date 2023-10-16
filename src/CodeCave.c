@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 // define the page size
@@ -21,38 +22,38 @@ uint64_t headerSize(Elf64_Ehdr ehdr);
 // Create a makefile
 
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr) {
-    // increment the file pointer so we don't accidentally overwrite
-    // the headers
-    int err = lseek(fd, headerSize(ehdr), SEEK_SET);
-    if (err < 0) {
-        fprintf(stderr, "lseek couldn't move file pointer");
-        exit(1);
-    }
-    printf("Virtual address offset = %d\n", phdr.p_vaddr);
-    CodeCave codeCave;
-    codeCave.offset = 0;
-    codeCave.vaddr = 0;
-    codeCave.size = 0;
+    CodeCave maxCave;
+    maxCave.size = 0;
+    CodeCave cur = {0, 0, 0};
 
     char buf[PAGE_SIZE];
     bool isConsecutive = false;
     while (read(fd, buf, PAGE_SIZE) > 0) {
-        if (isCodeCave(buf) && !codeCave.vaddr) {
-            codeCave.offset = lseek(fd, -PAGE_SIZE, SEEK_CUR);
-            codeCave.size = PAGE_SIZE;
-            codeCave.vaddr = phdr.p_vaddr + codeCave.offset;
-
+        if (cur.size == 0 && isCodeCave(buf)) {
+            cur.offset = lseek(fd, 0, SEEK_CUR);
+            cur.size += PAGE_SIZE;
+            cur.vaddr = phdr.p_vaddr;
             isConsecutive = true;
-
-            printf("Found code cave!!\n");
-            lseek(fd, PAGE_SIZE, SEEK_CUR);
-        } else if (isCodeCave(buf) && isConsecutive) {
-            codeCave.size += PAGE_SIZE;
+        } else if (isConsecutive && isCodeCave(buf)) {
+            cur.size += PAGE_SIZE;
         } else {
             isConsecutive = false;
+
+            if (cur.size > maxCave.size) {
+                maxCave = cur;
+                cur.offset = 0;
+                cur.size = 0;
+                cur.vaddr = 0;
+            }
         }
     }
-    return codeCave;
+
+    if (maxCave.size == 0) {
+        fprintf(stderr, "Couldn't find code cave\n");
+        exit(1);
+    }
+
+    return maxCave;
 }   
 
 bool isCodeCave(char buf[PAGE_SIZE]) {
