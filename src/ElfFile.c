@@ -109,20 +109,20 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
         int count = read(fd, &shdr, sizeof(shdr));
 
         if (count < sizeof(shdr)) {
-            fprintf(stdout, "ElfMarkExecutable couldn't read file\n");
+            fprintf(stderr, "ElfMarkExecutable couldn't read file\n");
             return FAILURE;
         } else if (between(offset, shdr.sh_addr, shdr.sh_size)) {
             shdr.sh_flags |= SHF_EXECINSTR;
 
             err = lseek(fd, -sizeof(shdr), SEEK_CUR);
             if (err < 0) {
-                fprintf(stdout, "ElfMarkExecutable lseek failed\n");
+                fprintf(stderr, "ElfMarkExecutable lseek failed\n");
                 return FAILURE;
             }
 
             err = write(fd, &shdr, sizeof(shdr));
             if (err < 0) {
-                fprintf(stdout, "ElfMarkExecutable couldn't write to file\n");
+                fprintf(stderr, "ElfMarkExecutable couldn't write to file\n");
                 return FAILURE;
             }
             return SUCCESS;
@@ -130,7 +130,7 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
     }
 
     // couldn't find the corresponding section, return failure
-    fprintf(stdout, "ElfMarkExecutable couldn't find section");
+    fprintf(stderr, "ElfMarkExecutable couldn't find section");
     return FAILURE;
 }
 
@@ -138,13 +138,13 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
 int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
     int err = lseek(fd, offset, SEEK_SET);
     if (err < 0) {
-        fprintf(stdout, "ElfOverwriteSection, couldn't lseek\n");
+        fprintf(stderr, "ElfOverwriteSection, couldn't lseek\n");
         return FAILURE;
     }
 
     err = write(fd, buf, bufSize);
     if (err < 0) {
-        fprintf(stdout, "ElfOverwriteSection, couldn't write to file");
+        fprintf(stderr, "ElfOverwriteSection, couldn't write to file");
         return FAILURE;
     }
 
