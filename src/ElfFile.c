@@ -82,7 +82,8 @@ Elf64_Phdr ElfExtractProgramHeader(int fd, Elf64_Ehdr ehdr) {
         if (count < sizeof(phdr)) {
             fprintf(stdout, "Reading program header failed\n");
             exit(FAILURE);
-        } else if (phdr.p_type == PT_LOAD) {
+        } else if (phdr.p_type == PT_LOAD && phdr.p_vaddr > 0) {
+            printf("HERE\n");
             break;
         }
 
