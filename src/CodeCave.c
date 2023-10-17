@@ -22,7 +22,6 @@ uint64_t headerSize(Elf64_Ehdr ehdr);
 
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr) {
     CodeCave maxCave;
-    printf("Vaddr is %d\n", phdr.p_vaddr);
     maxCave.size = 0;
     CodeCave cur = {0, 0, 0};
 

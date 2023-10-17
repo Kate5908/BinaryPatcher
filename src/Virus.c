@@ -42,14 +42,13 @@ int main(int argc, char **argv) {
         Elf64_Phdr phdr = ElfExtractProgramHeader(fd, ehdr);
         // store the original return address
         Elf64_Addr original = ehdr.e_entry;
-        printf("Original entry point at %d\n", original);
 
         CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
 
         ehdr.e_entry = codeCave.vaddr;
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
-            printf("Couldn't lseek to start of file\n");
+            fprintf(stderr, "Couldn't lseek to start of file\n");
             goto end;
         }
         write(fd, &ehdr, sizeof(ehdr));
@@ -65,8 +64,8 @@ int main(int argc, char **argv) {
         }
         // are these zero bytes going to be identified as a null terminator?
         //dprintf(fd, "%d\x80\xd2", shiftedAddr);
-        write(fd, "\xd2\x80\xc8\x1e\xd6\x5f\x03\xc0\x52\x80\x00\x00\xd6\x5f\x03\xc0", 16);
-        printf("Wrote to file\n");
+       // \xd2\x80\xc8\x1e\xd6\x5f\x03\xc0\x52\x80\x00\x00\xd6\x5f\x03\xc0
+        write(fd, "\xc0\x03\x5f\xd6\x00\x00\x80\x52\xc0\x03\x5f\xd6\x1e\xc8\x80\xd2", 16);
 
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
