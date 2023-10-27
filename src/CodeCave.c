@@ -3,6 +3,8 @@
 // 07/10/23
 // Implementation file for CodeCave.h
 
+#ifdef __linux__
+
 #include "include/CodeCave.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -68,3 +70,5 @@ bool isCodeCave(char buf[PAGE_SIZE]) {
 uint64_t headerSize(Elf64_Ehdr ehdr) {
     return ehdr.e_shoff + ehdr.e_shnum * ehdr.e_shentsize;
 }
+
+#endif

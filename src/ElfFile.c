@@ -2,6 +2,8 @@
 // Kate Rodionoff
 // 07/10/23
 
+#ifdef __linux__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,3 +155,5 @@ int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
 bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size) {
     return start <= offset && start + size > offset;
 }
+
+#endif

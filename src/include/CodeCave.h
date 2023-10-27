@@ -2,6 +2,8 @@
 // Kate Rodionoff
 //  07/10/23
 
+#ifdef __linux__
+
 #include <elf.h>
 #include <stddef.h>
 
@@ -17,3 +19,5 @@ typedef struct codeCave {
 // finds a code cave in file specified by fd
 // fd must already be opened
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr);
+
+#endif

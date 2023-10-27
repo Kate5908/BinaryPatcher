@@ -7,6 +7,8 @@
 // find entry point
 // inject simple code (to start with)
 
+#ifdef __linux__
+
 #include "include/ElfFile.h"
 #include "include/CodeCave.h"
 #include <fcntl.h>
@@ -46,6 +48,7 @@ int main(int argc, char **argv) {
         CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
 
         ehdr.e_entry = codeCave.vaddr;
+        printf("New entry point is %x with offset %x\n", ehdr.e_entry, codeCave.offset);
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
             fprintf(stderr, "Couldn't lseek to start of file\n");
@@ -65,8 +68,8 @@ int main(int argc, char **argv) {
         // are these zero bytes going to be identified as a null terminator?
         //dprintf(fd, "%d\x80\xd2", shiftedAddr);
        // \xd2\x80\xc8\x1e\xd6\x5f\x03\xc0\x52\x80\x00\x00\xd6\x5f\x03\xc0
-        write(fd, "\xc0\x03\x5f\xd6\x00\x00\x80\x52\xc0\x03\x5f\xd6\x1e\xc8\x80\xd2", 16);
-
+       // \x14\x00\x01\xd5\x52\x80\x00\x00\xd6\x5f\x03\xc0\xd5\x03\x20\x1f
+        write(fd, "\x58\x00\x3a\xaa\xd6\x1f\x01\x40\x52\x80\x00\x00\xd6\x5f\x03\xc0", 16);
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
             fprintf(stderr, "Couldn't mark section executable\n");
@@ -96,3 +99,4 @@ Elf64_Addr convertLittleEndian(Elf64_Addr addr) {
     return b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7;
 }
 
+#endif
