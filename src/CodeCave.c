@@ -26,6 +26,7 @@ CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr) {
     CodeCave maxCave;
     maxCave.size = 0;
     CodeCave cur = {0, 0, 0};
+    lseek(fd, ehdr.e_phoff + ehdr.e_phentsize * ehdr.e_phnum, SEEK_SET);
 
     char buf[PAGE_SIZE];
     bool isConsecutive = false;

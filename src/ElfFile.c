@@ -112,8 +112,9 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
         if (count < sizeof(shdr)) {
             fprintf(stderr, "ElfMarkExecutable couldn't read file\n");
             return FAILURE;
-        } else if (between(offset, shdr.sh_addr, shdr.sh_size)) {
+        } else if (shdr.sh_addr < offset) {
             shdr.sh_flags |= SHF_EXECINSTR;
+            shdr.sh_flags |= SHF_ALLOC;
 
             err = lseek(fd, -sizeof(shdr), SEEK_CUR);
             if (err < 0) {

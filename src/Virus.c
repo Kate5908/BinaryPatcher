@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
         CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
 
-        ehdr.e_entry = codeCave.vaddr;
+        ehdr.e_entry = codeCave.vaddr + codeCave.offset;
         printf("New entry point is %x with offset %x\n", ehdr.e_entry, codeCave.offset);
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
@@ -69,7 +69,8 @@ int main(int argc, char **argv) {
         //dprintf(fd, "%d\x80\xd2", shiftedAddr);
        // \xd2\x80\xc8\x1e\xd6\x5f\x03\xc0\x52\x80\x00\x00\xd6\x5f\x03\xc0
        // \x14\x00\x01\xd5\x52\x80\x00\x00\xd6\x5f\x03\xc0\xd5\x03\x20\x1f
-        write(fd, "\x58\x00\x3a\xaa\xd6\x1f\x01\x40\x52\x80\x00\x00\xd6\x5f\x03\xc0", 16);
+       //  0x14100160      0x52800000      0xd65f03c0      0xd503201f
+        write(fd, "\x1f\x20\x03\xd5\xc0\x03\x5f\xd6\x00\x00\x80\x52\x60\x01\x10\x14", 17);
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
             fprintf(stderr, "Couldn't mark section executable\n");
