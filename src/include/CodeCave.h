@@ -18,6 +18,6 @@ typedef struct codeCave {
 
 // finds a code cave in file specified by fd
 // fd must already be opened
-CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr);
+CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr, int min);
 
 #endif

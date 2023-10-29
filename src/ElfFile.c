@@ -105,6 +105,7 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
     int err = lseek(fd, elf.e_shoff, SEEK_SET);
     if (err < 0) return FAILURE;
 
+    int success = 0;
     for (int i = 0; i < elf.e_shnum; i++) {
         Elf64_Shdr shdr;
         int count = read(fd, &shdr, sizeof(shdr));
@@ -112,7 +113,7 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
         if (count < sizeof(shdr)) {
             fprintf(stderr, "ElfMarkExecutable couldn't read file\n");
             return FAILURE;
-        } else if (shdr.sh_addr < offset) {
+        } else if (shdr.sh_addr < offset && !success) {
             shdr.sh_flags |= SHF_EXECINSTR;
             shdr.sh_flags |= SHF_ALLOC;
 
@@ -127,8 +128,15 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd) {
                 fprintf(stderr, "ElfMarkExecutable couldn't write to file\n");
                 return FAILURE;
             }
-            return SUCCESS;
+            success = 1;
         }
+
+        if (shdr.sh_name == 13) {
+            shdr.sh_addr = offset;
+            lseek(fd, -sizeof(shdr), SEEK_CUR);
+            write(fd, &shdr, sizeof(shdr));
+        }
+        return SUCCESS;
     }
 
     // couldn't find the corresponding section, return failure

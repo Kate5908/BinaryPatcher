@@ -45,9 +45,12 @@ int main(int argc, char **argv) {
         // store the original return address
         Elf64_Addr original = ehdr.e_entry;
 
-        CodeCave codeCave = FindCodeCave(fd, phdr, ehdr);
+        CodeCave codeCave = FindCodeCave(fd, phdr, ehdr, 16);
+        printf("CodeCave found at %x\n", codeCave.offset);
 
-        ehdr.e_entry = codeCave.vaddr + codeCave.offset;
+        //codeCave.offset = 0x1000;
+
+        ehdr.e_entry = phdr.p_vaddr + codeCave.offset;
         printf("New entry point is %x with offset %x\n", ehdr.e_entry, codeCave.offset);
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
@@ -57,20 +60,13 @@ int main(int argc, char **argv) {
         write(fd, &ehdr, sizeof(ehdr));
 
         err = lseek(fd, codeCave.offset, SEEK_SET);
-        // is this bad? Does this make me the worst programmer ever? Probably
-        // this could easily be a function
-        // I'm leaving this as a goto right now
-        // TODO: care about code style
+
         if (err < 0) {
             fprintf(stderr, "Couldn't lseek to code cave position\n");
             goto end;
         }
-        // are these zero bytes going to be identified as a null terminator?
-        //dprintf(fd, "%d\x80\xd2", shiftedAddr);
-       // \xd2\x80\xc8\x1e\xd6\x5f\x03\xc0\x52\x80\x00\x00\xd6\x5f\x03\xc0
-       // \x14\x00\x01\xd5\x52\x80\x00\x00\xd6\x5f\x03\xc0\xd5\x03\x20\x1f
-       //  0x14100160      0x52800000      0xd65f03c0      0xd503201f
-        write(fd, "\x1f\x20\x03\xd5\xc0\x03\x5f\xd6\x00\x00\x80\x52\x60\x01\x10\x14", 17);
+
+        write(fd, "\x16\x00\x80\xd2\xd6\x02\x50\x91\xd6\x02\x16\x91\xc0\x02\x1f\xd6", 16);
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
             fprintf(stderr, "Couldn't mark section executable\n");
@@ -80,7 +76,7 @@ int main(int argc, char **argv) {
         end:
             close(fd);
     }
-    // TODO: Fix the seg fault error :)
+
     return 0;
 }
 
