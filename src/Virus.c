@@ -20,8 +20,6 @@
 #define MIN_ARGS 2
 #define MOV_RET_INSTR "\x80\xd2" // note: bytes are presented in reverse order
 
-Elf64_Addr convertLittleEndian(Elf64_Addr addr);
-
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
         fprintf(stdout, "Too few arguments to call program\n");
@@ -50,7 +48,13 @@ int main(int argc, char **argv) {
 
         //codeCave.offset = 0x1000;
 
-        ehdr.e_entry = phdr.p_vaddr + codeCave.offset;
+        // if it's a PIE binary we need to execute like this:
+        // adrp x0,0x0
+        // add x0, #Physical address of entry point
+        // br x0
+        if (!isPie(ehdr)) ehdr.e_entry = phdr.p_vaddr + codeCave.offset;
+        else ehdr.e_entry = codeCave.offset;
+
         printf("New entry point is %x with offset %x\n", ehdr.e_entry, codeCave.offset);
         int err = lseek(fd, 0, SEEK_SET);
         if (err < 0) {
@@ -80,20 +84,5 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-// converts an address into little endian
-Elf64_Addr convertLittleEndian(Elf64_Addr addr) {
-    // 0xffffffffffff0000
-    uint64_t b0, b1, b2, b3, b4, b5, b6, b7;
-    b0 = (addr & 0x00000000000000ff) << 56;
-    b1 = (addr & 0x000000000000ff00) << 48;
-    b2 = (addr & 0x0000000000ff0000) << 42;
-    b3 = (addr & 0x00000000ff000000) << 36;
-    b4 = (addr & 0x000000ff00000000) >> 8;
-    b5 = (addr & 0x0000ff0000000000) >> 24;
-    b6 = (addr & 0x00ff000000000000) >> 40;
-    b7 = (addr & 0xff00000000000000) >> 56;
-
-    return b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7;
-}
 
 #endif

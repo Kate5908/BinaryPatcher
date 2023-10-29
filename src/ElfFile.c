@@ -165,4 +165,8 @@ bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size) {
     return start <= offset && start + size > offset;
 }
 
+bool isPie(Elf64_Ehdr ehdr) {
+    return ehdr.e_type == ET_DYN;
+}
+
 #endif
