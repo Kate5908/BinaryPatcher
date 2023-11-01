@@ -2,4 +2,4 @@
 
 char *immediateUnshiftedAdd(uint32_t imm);
 
-char *immediateShiftedAddress(uint32_t imm);
+char *immediateShiftedAdd(uint32_t imm);

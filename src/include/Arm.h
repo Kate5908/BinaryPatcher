@@ -5,7 +5,8 @@
 #define INSTRUCTION_SIZE 4
 #define INVALID_REG -1
 
-char *encodeImm(uint32_t n);
-void binaryToHex(char *binary, int shift, char *hex);
+const char *adrp(uint32_t imm);
+char *add(uint32_t imm);
+const char *mov(void);
 
 #endif

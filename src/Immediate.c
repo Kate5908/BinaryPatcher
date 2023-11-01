@@ -14,7 +14,7 @@ char *immediateUnshiftedAdd(uint32_t imm) {
     return res;
 }
 
-char *immediateShiftedAddress(uint32_t imm) {
+char *immediateShiftedAdd(uint32_t imm) {
     imm = imm / 0x1000;
     char *res = malloc(sizeof(char) * 2);
 
