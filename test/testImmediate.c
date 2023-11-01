@@ -31,4 +31,28 @@ int main(void) {
     assert(test[1] == '\x16');
 
     free(test);
+
+    test = immediateShiftedAddress(0x400000);
+    assert(test[0] == '\x02');
+    assert(test[1] == '\x50');
+
+    free(test);
+
+    test = immediateShiftedAddress(0x410000);
+    assert(test[0] == '\x42');
+    assert(test[1] == '\x50');
+
+    free(test);
+
+    test = immediateShiftedAddress(0x539000);
+    assert(test[0] == '\xe6');
+    assert(test[1] == '\x54');
+
+    free(test);
+
+    test = immediateShiftedAddress(0x123000);
+    assert(test[0] == '\x8e');
+    assert(test[1] == '\x44');
+
+    free(test);
 }
