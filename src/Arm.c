@@ -15,10 +15,6 @@
 // Assume size of all instructions is 4
 // Use register 22 for returning from functions
 // just makes my life easier to hard code that :)
-const char *adrp(uint32_t imm) {
-    return "\x16\x00\x00\x90";
-}
-
 char *add(uint32_t imm) {
     char *hex = malloc(sizeof(char) * INSTRUCTION_SIZE);
 
@@ -34,12 +30,6 @@ char *add(uint32_t imm) {
     free(i);
 
     return hex;
-}
-
-// moves immediate 0 into register 22
-// ensures that the register is reset
-const char *mov(void) {
-    return "\x16\x00\x80\xd2";
 }
 
 // returns the immediate for an unshifted ADD instruction
