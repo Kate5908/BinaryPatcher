@@ -19,8 +19,8 @@ char *add(uint32_t imm) {
     char *hex = malloc(sizeof(char) * INSTRUCTION_SIZE);
 
     char *i;
-    if (imm / 0x1000 > 0) i = immediateShiftedAdd(i);
-    else imm = immediateUnshiftedAdd(i);
+    if (imm / 0x1000 > 0) i = immediateShifted(imm);
+    else i = immediateUnshifted(imm);
 
     hex[0] = '\xd6';
     hex[1] = i[0];
