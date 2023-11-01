@@ -1,12 +1,15 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include "include/Immediate.h"
 
 // returns the immediate for an unshifted ADD instruction
 char *immediateUnshiftedAdd(uint32_t imm) {
     char *res = malloc(sizeof(char) * 2);
-    res[0] = '\x02';
-    res[1] = '\x00';
 
-    if (imm >= 0x0 && imm <= 0x3) {
-        res[0] = '\x02' + '\x4' * imm;
-    }
+    res[1] = (imm / 0x40) * '\x01';
+    imm = imm % 0x40;
+    res[0] = '\x10' * (imm / 0x4);
+    res[0] |= ('\x02' + '\x04' * (imm % 4));
+
+    return res;
 }
