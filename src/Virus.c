@@ -19,7 +19,6 @@
 #include <unistd.h>
 
 #define MIN_ARGS 2
-#define MOV_RET_INSTR "\x80\xd2" // note: bytes are presented in reverse order
 
 void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry);
 
