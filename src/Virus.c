@@ -97,7 +97,6 @@ void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
 
     char *addInstr = add(entry);
     write(fd, addInstr, 4);
-
     free(addInstr);
 
     write(fd, BR, 4);
@@ -113,6 +112,7 @@ void writeExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     free(addInstr);
 
     char *addInstr2 = add(entry - c.vaddr);
+    printf("%x %x %x\n", entry - c.vaddr, entry, c.vaddr);
     write(fd, addInstr2, 4);
 
     free(addInstr2);

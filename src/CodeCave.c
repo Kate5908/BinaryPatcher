@@ -6,6 +6,7 @@
 #ifdef __linux__
 
 #include "include/CodeCave.h"
+#include "include/ElfFile.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -21,15 +22,17 @@ CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr, int min) {
     cave.offset = 0;
     cave.size = 0;
     cave.vaddr = phdr.p_vaddr;
-
-    lseek(fd, 0, SEEK_SET);
+    int offset = 0;
+    if (isPie(ehdr)) offset = ehdr.e_entry;
+    else offset = ehdr.e_entry - phdr.p_vaddr; 
+    lseek(fd, offset, SEEK_SET);
     char buf[SIZE];
 
     while (read(fd, buf, SIZE) > 0) {
         if (isCodeCave(buf)) {
             cave.offset = lseek(fd, -16, SEEK_CUR);
             cave.size = SIZE;
-            cave.vaddr = phdr.p_vaddr + cave.offset;
+            cave.vaddr = phdr.p_vaddr;
             return cave;
         }
     }

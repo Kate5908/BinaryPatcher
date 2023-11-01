@@ -11,9 +11,11 @@
 // BR x22
 #define BR "\xc0\x02\x1f\xd6"
 
+#define LDR "\x16\x00\x00\x58"
+
 char *add(uint32_t imm);
 char *immediateUnshifted(uint32_t imm);
 char *immediateShifted(uint32_t imm);
-char *ldr(uint32_t imm);
+char *sub(uint32_t imm);
 
 #endif
