@@ -11,6 +11,7 @@
 
 #include "include/ElfFile.h"
 #include "include/CodeCave.h"
+#include "include/Arm.h"s
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -19,6 +20,8 @@
 
 #define MIN_ARGS 2
 #define MOV_RET_INSTR "\x80\xd2" // note: bytes are presented in reverse order
+
+void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry);
 
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
@@ -70,7 +73,6 @@ int main(int argc, char **argv) {
             goto end;
         }
 
-        write(fd, "\x16\x00\x80\xd2\xd6\x02\x50\x91\xd6\x02\x16\x91\xc0\x02\x1f\xd6", 16);
         err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
         if (err) {
             fprintf(stderr, "Couldn't mark section executable\n");
@@ -84,15 +86,21 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void writePieExecutable(int fd, CodeCave c) {
+void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     int err = lseek(fd, c.offset, SEEK_SET);
 
     if (err < 0) return;
 
     // adrp x21, #0x0
-    write(fd, "\x15\x00\x00\x90", 4);
+    lseek(fd, c.offset, SEEK_SET);
+    write(fd, MOV, 4);
 
-    // How to encode immediate???
+    write(fd, ADRP, 4);
+
+    char *addInstr = add(entry);
+    write(fd, addInstr, 4);
+
+    free(addInstr);
 }
 
 
