@@ -21,6 +21,7 @@
 #define MIN_ARGS 2
 
 void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry);
+void writeExecutable(int fd, CodeCave c, Elf64_Addr entry);
 
 int main(int argc, char **argv) {
     if (argc < MIN_ARGS) {
@@ -72,11 +73,14 @@ int main(int argc, char **argv) {
             goto end;
         }
 
-        err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
-        if (err) {
-            fprintf(stderr, "Couldn't mark section executable\n");
-            goto end;
-        }
+        // err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
+        // if (err) {
+        //     fprintf(stderr, "Couldn't mark section executable\n");
+        //     goto end;
+        // }
+
+        if (isPie(ehdr)) writePieExecutable(fd, codeCave, original);
+        else writeExecutable(fd, codeCave, original);
 
         end:
             close(fd);
@@ -86,11 +90,6 @@ int main(int argc, char **argv) {
 }
 
 void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
-    int err = lseek(fd, c.offset, SEEK_SET);
-
-    if (err < 0) return;
-
-    // adrp x21, #0x0
     lseek(fd, c.offset, SEEK_SET);
     write(fd, MOV, 4);
 
@@ -100,6 +99,23 @@ void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     write(fd, addInstr, 4);
 
     free(addInstr);
+
+    write(fd, BR, 4);
+}
+
+void writeExecutable(int fd, CodeCave c, Elf64_Addr entry) {
+    lseek(fd, c.offset, SEEK_SET);
+    write(fd, MOV, 4);
+    
+    char *addInstr = add(c.vaddr);
+    write(fd, addInstr, 4);
+
+    free(addInstr);
+
+    char *addInstr2 = add(entry - c.vaddr);
+    write(fd, addInstr2, 4);
+
+    free(addInstr2);
 
     write(fd, BR, 4);
 }
