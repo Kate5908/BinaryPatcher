@@ -100,6 +100,8 @@ void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     write(fd, addInstr, 4);
 
     free(addInstr);
+
+    write(fd, BR, 4);
 }
 
 
