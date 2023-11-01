@@ -84,5 +84,16 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void writePieExecutable(int fd, CodeCave c) {
+    int err = lseek(fd, c.offset, SEEK_SET);
+
+    if (err < 0) return;
+
+    // adrp x21, #0x0
+    write(fd, "\x15\x00\x00\x90", 4);
+
+    // How to encode immediate???
+}
+
 
 #endif
