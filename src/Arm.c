@@ -56,4 +56,16 @@ char *immediateShifted(uint32_t imm) {
     return res;
 }
 
+// ldr instructions can only be multiples of 4 :3
+// encodes LDR x22, IMMEDIATE
+// assumes that imm will be 3 digits max
+char *ldr(uint32_t imm) {
+    char *res = malloc(sizeof(char) * 4);
+
+    uint32_t mask = 0xf;
+    res[0] = '\x16' + '\x20' * (imm & mask);
+    res[1] = '\x01' * (imm / 0x20);
+    res[2] = '\x58';
+}
+
 #endif

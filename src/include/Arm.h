@@ -14,5 +14,6 @@
 char *add(uint32_t imm);
 char *immediateUnshifted(uint32_t imm);
 char *immediateShifted(uint32_t imm);
+char *ldr(uint32_t imm);
 
 #endif
