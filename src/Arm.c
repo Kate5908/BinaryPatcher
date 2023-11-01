@@ -43,7 +43,7 @@ const char *mov(void) {
 }
 
 // returns the immediate for an unshifted ADD instruction
-char *immediateUnshiftedAdd(uint32_t imm) {
+char *immediateUnshifted(uint32_t imm) {
     char *res = malloc(sizeof(char) * 2);
 
     res[1] = (imm / 0x40) * '\x01';
@@ -54,7 +54,7 @@ char *immediateUnshiftedAdd(uint32_t imm) {
     return res;
 }
 
-char *immediateShiftedAdd(uint32_t imm) {
+char *immediateShifted(uint32_t imm) {
     imm = imm / 0x1000;
     char *res = malloc(sizeof(char) * 2);
 
