@@ -15,8 +15,10 @@
 typedef struct codeCave {
     // physical offset of the codeCave
     size_t offset;
+    #ifdef __linux__
     // virtual address of the code cave
     int64_t vaddr;
+    #endif
     // size of the code cave
     size_t size;
 } CodeCave;

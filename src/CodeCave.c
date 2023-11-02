@@ -3,10 +3,7 @@
 // 07/10/23
 // Implementation file for CodeCave.h
 
-#ifdef __linux__
-
 #include "include/CodeCave.h"
-#include "include/ElfFile.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,6 +13,9 @@
 #define SIZE 16
 
 bool isCodeCave(char buf[SIZE]);
+#ifdef __linux__
+
+#include "include/ElfFile.h"
 
 CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr, int min) {
     CodeCave cave;
@@ -40,6 +40,17 @@ CodeCave FindCodeCave(int fd, Elf64_Phdr phdr, Elf64_Ehdr ehdr, int min) {
     fprintf(stderr, "Couldn't find code cave!\n");
     exit(1);
 }
+#endif
+
+#ifdef __APPLE__
+    CodeCave FindCodeCave(int fd) {
+        CodeCave c;
+        c.offset = 0;
+        c.size = 0;
+
+        
+    }
+#endif
 
 bool isCodeCave(char buf[SIZE]) {
     for (int i = 0; i < SIZE; i++) {
@@ -48,5 +59,3 @@ bool isCodeCave(char buf[SIZE]) {
 
     return true;
 }
-
-#endif
