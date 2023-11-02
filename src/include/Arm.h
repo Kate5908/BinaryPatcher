@@ -11,8 +11,6 @@
 // BR x22
 #define BR "\xc0\x02\x1f\xd6"
 
-#define LDR "\x16\x00\x00\x58"
-
 // encodes the instruction ADD x22, x22, [imm] in ARM64
 char *add(uint32_t imm);
 
