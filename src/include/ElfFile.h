@@ -30,6 +30,7 @@ int ElfMarkExecutable(Elf64_Ehdr elf, Elf64_Addr offset, int fd);
 // overwrites section specified by offset with contents of buffer
 int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd);
 
+// checks if the given elf file is a position independent executable
 bool isPie(Elf64_Ehdr ehdr);
 
 #endif
