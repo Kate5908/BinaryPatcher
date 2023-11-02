@@ -7,6 +7,13 @@
 #include <elf.h>
 #include <stddef.h>
 
+/**
+ * A code cave is a region in an executable comprised entirely of zeroes
+ * We want to find the code cave closest to the original entry point of the
+ * executable. This ensures we won't segfault because the patched entry
+ * point is outside the program's address space and that we won't overwrite
+ * the program's headers
+ */
 typedef struct codeCave {
     // physical offset of the codeCave
     size_t offset;
