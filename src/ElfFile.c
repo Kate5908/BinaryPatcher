@@ -15,8 +15,6 @@
 #define MAGIC_BYTES_SIZE 4
 #define SUCCESS 0
 
-bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size);
-
 bool Elf(int fd) {
     // reset the file pointer
     int err = lseek(fd, 0, SEEK_SET);
@@ -159,10 +157,6 @@ int ElfOverwriteSection(size_t offset, char *buf, int bufSize, int fd) {
     }
 
     return SUCCESS;
-}
-
-bool between(Elf64_Addr start, Elf64_Addr offset, uint64_t size) {
-    return start <= offset && start + size > offset;
 }
 
 bool isPie(Elf64_Ehdr ehdr) {

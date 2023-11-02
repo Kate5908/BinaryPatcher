@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
             goto end;
         }
 
+        // give us write permissions just in case
         char *args[2] = {"+w", argv[i]};
         pid_t pid;
         posix_spawn(&pid, "chmod", NULL, NULL, args, NULL);
@@ -49,12 +50,6 @@ int main(int argc, char **argv) {
         CodeCave codeCave = FindCodeCave(fd, phdr, ehdr, 16);
         printf("CodeCave found at %x\n", codeCave.offset);
 
-        //codeCave.offset = 0x1000;
-
-        // if it's a PIE binary we need to execute like this:
-        // adrp x0,0x0
-        // add x0, #Physical address of entry point
-        // br x0
         if (!isPie(ehdr)) ehdr.e_entry = phdr.p_vaddr + codeCave.offset;
         else ehdr.e_entry = codeCave.offset;
 
@@ -73,12 +68,6 @@ int main(int argc, char **argv) {
             goto end;
         }
 
-        // err = ElfMarkExecutable(ehdr, codeCave.offset, fd);
-        // if (err) {
-        //     fprintf(stderr, "Couldn't mark section executable\n");
-        //     goto end;
-        // }
-
         if (isPie(ehdr)) writePieExecutable(fd, codeCave, original);
         else writeExecutable(fd, codeCave, original);
 
@@ -89,6 +78,18 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * Writes the following instructions (in machine code) to a position independent executable:
+ *      MOV x22, #0x0
+ *      ADRP x22, #0x0
+ *      ADD x22, x22, [entry]
+ *      BR x22
+ * 
+ *      Parameters:
+ *          - fd (int): file descriptor of ELF executable
+ *          - c (CodeCave): struct containing information about region we're writing to
+ *          - entry (Elf64_Addr): original entry point of ELF executable
+ */
 void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     lseek(fd, c.offset, SEEK_SET);
     write(fd, MOV, 4);
@@ -102,6 +103,18 @@ void writePieExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     write(fd, BR, 4);
 }
 
+/**
+ * Writes the following instructions (in machine code) to an ELF executable:
+ *      MOV x22, #0x0
+ *      ADD x22, x22, [vaddr], lsl #12
+ *      ADD x22, x22, [physical offset of original entry]
+ *      BR x22
+ * 
+ *      Parameters:
+ *          - fd (int): file descriptor of ELF executable
+ *          - c (CodeCave): struct containing information about the region we're writing to
+ *          - entry (Elf64_Addr): The original entry point of the ELF executable
+ */
 void writeExecutable(int fd, CodeCave c, Elf64_Addr entry) {
     lseek(fd, c.offset, SEEK_SET);
     write(fd, MOV, 4);
