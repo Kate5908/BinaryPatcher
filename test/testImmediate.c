@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
-#include "../src/include/Immediate.h"
+#include "../src/include/Arm.h"
 
 int main(void) {
     char *test = immediateUnshiftedAdd(0x0);
